@@ -59,7 +59,7 @@ on:
         default: ''
 
 env:
-  MEMORY: 256M
+  MEMORY: 512M
 
 jobs:
   deploy-app:
@@ -86,10 +86,16 @@ jobs:
           "SG(free)")
             echo "CF_API=https://api.cf.ap21.hana.ondemand.com" >> $GITHUB_ENV
             echo "APP_NAME=free-sg$RANDOM_STR" >> $GITHUB_ENV
+            # 设置免费区域专用环境变量
+            echo "FREE_REGION_ARGO_AUTH=${{ secrets.ARGO_AUTH_SG }}" >> $GITHUB_ENV
+            echo "FREE_REGION_ARGO_DOMAIN=${{ secrets.ARGO_DOMAIN_SG }}" >> $GITHUB_ENV
             ;;
           "US(free)")
             echo "CF_API=https://api.cf.us10-001.hana.ondemand.com" >> $GITHUB_ENV
             echo "APP_NAME=free-us$RANDOM_STR" >> $GITHUB_ENV
+            # 设置免费区域专用环境变量
+            echo "FREE_REGION_ARGO_AUTH=${{ secrets.ARGO_AUTH_US }}" >> $GITHUB_ENV
+            echo "FREE_REGION_ARGO_DOMAIN=${{ secrets.ARGO_DOMAIN_US }}" >> $GITHUB_ENV
             ;;
           # AWS 区域
           "AWS-AU(Sydney)")
@@ -226,7 +232,7 @@ jobs:
           elif [ "${{ github.event.inputs.type }}" = "xhttp直连" ]; then
             echo "DOCKER_IMAGE=ghcr.io/eooce/goxhttp:latest" >> $GITHUB_ENV
           else 
-            echo "DOCKER_IMAGE=ghcr.io/eooce/nodejs:main" >> $GITHUB_ENV
+            echo "DOCKER_IMAGE=ghcr.io/dogchild/nodejs-argo-xray:main" >> $GITHUB_ENV
           fi
         fi
         
@@ -253,7 +259,7 @@ jobs:
 
     - name: Deploy application
       run: |
-        if cf push ${{ env.APP_NAME }} --docker-image ${{ env.DOCKER_IMAGE }} -m ${{ env.MEMORY }} -k 256M --health-check-type port; then
+        if cf push ${{ env.APP_NAME }} --docker-image ${{ env.DOCKER_IMAGE }} -m ${{ env.MEMORY }} -k 512M --health-check-type port; then
           echo "Deployment successful"
         else
           cf delete ${{ env.APP_NAME }} -f
@@ -266,17 +272,23 @@ jobs:
         # 基础环境变量
         cf set-env ${{ env.APP_NAME }} NAME "SAP"
         cf set-env ${{ env.APP_NAME }} UUID "${{ secrets.UUID }}"
-        cf set-env ${{ env.APP_NAME }} NEZHA_SERVER "${{ secrets.NEZHA_SERVER }}"
-        cf set-env ${{ env.APP_NAME }} NEZHA_PORT "${{ secrets.NEZHA_PORT }}"
-        cf set-env ${{ env.APP_NAME }} NEZHA_KEY "${{ secrets.NEZHA_KEY }}"
         cf set-env ${{ env.APP_NAME }} ARGO_PORT "${{ secrets.ARGO_PORT }}"
-        cf set-env ${{ env.APP_NAME }} ARGO_DOMAIN "${{ secrets.ARGO_DOMAIN }}"
-        cf set-env ${{ env.APP_NAME }} ARGO_AUTH "${{ secrets.ARGO_AUTH }}"
         cf set-env ${{ env.APP_NAME }} SUB_PATH "${{ secrets.SUB_PATH }}"
         cf set-env ${{ env.APP_NAME }} CFIP "${{ secrets.CFIP || 'cf.877774.xyz' }}"
         cf set-env ${{ env.APP_NAME }} CFPORT "${{ secrets.CFPORT }}"
         cf set-env ${{ env.APP_NAME }} CHAT_ID "${{ secrets.CHAT_ID }}"
         cf set-env ${{ env.APP_NAME }} BOT_TOKEN "${{ secrets.BOT_TOKEN }}"
+        
+        # 区域差异化环境变量处理
+        if [ -n "${{ env.FREE_REGION_ARGO_AUTH }}" ]; then
+          # 免费区域使用专用环境变量
+          cf set-env ${{ env.APP_NAME }} ARGO_DOMAIN "${{ env.FREE_REGION_ARGO_DOMAIN }}"
+          cf set-env ${{ env.APP_NAME }} ARGO_AUTH "${{ env.FREE_REGION_ARGO_AUTH }}"
+        else
+          # 企业版区域使用标准环境变量
+          cf set-env ${{ env.APP_NAME }} ARGO_DOMAIN "${{ secrets.ARGO_DOMAIN }}"
+          cf set-env ${{ env.APP_NAME }} ARGO_AUTH "${{ secrets.ARGO_AUTH }}"
+        fi
 
         # 可选：从文件读取环境变量(如果存在)
         if [ -f .env ]; then

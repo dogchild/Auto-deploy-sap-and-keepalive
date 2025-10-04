@@ -3,8 +3,6 @@
 ## 概述
 
 本项目是自动部署argo隧道或直连节点到SAP Cloud平台，试用版提供完美的自动保活的方案,并适配企业版部署，企业版无需保活
-- 视频教程：https://www.youtube.com/watch?v=uHvtVaeVCvE
-- telegram交流反馈群组：https://t.me/eooceu
 
 ### 前置要求
 * GitHub 账户：需要有一个 GitHub 账户来创建仓库和设置工作流
@@ -27,11 +25,13 @@
      - ARGO_DOMAIN(固定隧道域名,未设置将使用临时隧道),使用直连镜像时没有此变量
      - ARGO_AUTH(固定隧道json或token,未设置将使用临时隧道),使用直连镜像时没有此变量
      - SUB_PATH(订阅token,未设置默认是sub)
+   - **免费区域专用环境变量**（仅SG(free)和US(free)区域需要设置）：
+     - ARGO_AUTH_SG(新加坡免费区域隧道认证)
+     - ARGO_DOMAIN_SG(新加坡免费区域隧道域名)
+     - ARGO_AUTH_US(美国免费区域隧道认证)
+     - ARGO_DOMAIN_US(美国免费区域隧道域名)
    - 可选环境变量
      - ARGO_PORT(自定义argo隧道端口,不设置默认为8001)
-     - NEZHA_SERVER(v1形式: nezha.xxx.com:8008  v0形式：nezha.xxx.com)
-     - NEZHA_PORT(V1哪吒没有这个)
-     - NEZHA_KEY(v1的NZ_CLIENT_SECRET或v0的agent密钥)
      - CFIP(优选域名或优选ip),使用直连镜像时没有此变量
      - CFPORT(优选域名或优选ip对应端口),使用直连镜像时没有此变量
      - DOCKER_IMAGE(使用的docker镜像),默认使用argo隧道CDN
@@ -56,7 +56,7 @@
 - 推荐使用keep.sh在vps或nat小鸡上精准保活，下载keep.sh文件到本地或vps上，在开头添加必要的环境变量和保活url然后执行`bash keep.sh`即可
 1. 下载文件到vps或本地
 ```bash
-wget https://raw.githubusercontent.com/eooce/Auto-deploy-sap-and-keepalive/refs/heads/main/keep.sh && chmod +x keep.sh
+wget https://raw.githubusercontent.com/dogchild/Auto-deploy-sap-and-keepalive/refs/heads/main/keep.sh && chmod +x keep.sh
 ```
 2. 修改keep.sh开头4-8行中的变量和保活url
 3. `bash keep.sh`运行即可
