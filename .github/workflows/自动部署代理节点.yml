@@ -271,7 +271,7 @@ jobs:
       run: |
         # 基础环境变量
         cf set-env ${{ env.APP_NAME }} NAME "SAP"
-        cf set-env ${{ env.APP_NAME }} ID "${{ secrets.UUID }}"
+        cf set-env ${{ env.APP_NAME }} UID "${{ secrets.UUID }}"
         cf set-env ${{ env.APP_NAME }} A_PORT "${{ secrets.ARGO_PORT }}"
         cf set-env ${{ env.APP_NAME }} S_PATH "${{ secrets.SUB_PATH }}"
         cf set-env ${{ env.APP_NAME }} CIP "${{ secrets.CFIP || 'cf.877774.xyz' }}"
